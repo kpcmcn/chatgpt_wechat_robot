@@ -61,7 +61,7 @@ type ChoiceItem1 struct {
 //-H "Content-Type: application/json"
 //-H "Authorization: Bearer your chatGPT key"
 //-d '{"model": "text-davinci-003", "prompt": "give me good song", "temperature": 0, "max_tokens": 7}'
-func Completions1(msg string) (string, error) {
+func openCompletions(msg string) (string, error) {
 	var openAIResponse *OpenAIResponse
 	var resErr error
 	for retry := 1; retry <= 3; retry++ {
