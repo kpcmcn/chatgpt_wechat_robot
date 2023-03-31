@@ -9,11 +9,28 @@ import (
 	"log"
 	"net/http"
 	"time"
-
 	"github.com/qingconglaixueit/wechatbot/config"
 )
 
-// ChatGPTResponseBody 请求体
+// 3.5版本请求参数message结构
+type Message struct {
+	Role string `json:"role"`
+	Content string `json:"content"`
+}
+
+// ChatGPTRequestBody 请求体
+type ChatGPTRequestBody struct {
+	Model            string  `json:"model"`
+	Prompt           string  `json:"prompt"`
+	Messages         []Message  `json:"messages"`
+	MaxTokens        uint    `json:"max_tokens"`
+	Temperature      float64 `json:"temperature"`
+	TopP             int     `json:"top_p"`
+	FrequencyPenalty int     `json:"frequency_penalty"`
+	PresencePenalty  int     `json:"presence_penalty"`
+}
+
+// ChatGPTResponseBody 响应体
 type ChatGPTResponseBody struct {
 	ID      string                 `json:"id"`
 	Object  string                 `json:"object"`
@@ -34,18 +51,9 @@ type ChoiceItem struct {
 	Index        int    `json:"index"`
 	Logprobs     int    `json:"logprobs"`
 	FinishReason string `json:"finish_reason"`
+	Message Message `json:"message"`
 }
 
-// ChatGPTRequestBody 响应体
-type ChatGPTRequestBody struct {
-	Model            string  `json:"model"`
-	Prompt           string  `json:"prompt"`
-	MaxTokens        uint    `json:"max_tokens"`
-	Temperature      float64 `json:"temperature"`
-	TopP             int     `json:"top_p"`
-	FrequencyPenalty int     `json:"frequency_penalty"`
-	PresencePenalty  int     `json:"presence_penalty"`
-}
 
 // Completions gtp文本模型回复
 //curl https://api.openai.com/v1/completions
@@ -73,7 +81,11 @@ func Completions(msg string) (string, error) {
 	}
 	var reply string
 	if gptResponseBody != nil && len(gptResponseBody.Choices) > 0 {
-		reply = gptResponseBody.Choices[0].Text
+		if(gptResponseBody.Model=="gpt-3.5-turbo"){
+			reply = gptResponseBody.Choices[0].Message.Content
+		}else{
+			reply = gptResponseBody.Choices[0].Text
+		}
 	}
 	return reply, nil
 }
@@ -100,7 +112,18 @@ func httpRequestCompletions(msg string, runtimes int) (*ChatGPTResponseBody, err
 
 	log.Printf("gpt request(%d) json: %s\n", runtimes, string(requestData))
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/completions", bytes.NewBuffer(requestData))
+	httpUrl := "https://api.openai.com/v1/completions"
+	if cfg.Model == "gpt-3.5-turbo" {
+		httpUrl = "https://api.openai.com/v1/chat/completions"
+		requestBody.Prompt = "";
+		msgInfo := Message{
+			Role: "user",
+			Content: msg,
+		}
+		requestBody.Messages = []Message{msgInfo}
+	}
+
+	req, err := http.NewRequest(http.MethodPost, httpUrl, bytes.NewBuffer(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("http.NewRequest error: %v", err)
 	}
