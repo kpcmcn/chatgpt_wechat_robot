@@ -105,13 +105,6 @@ func httpRequestCompletions(msg string, runtimes int) (*ChatGPTResponseBody, err
 		FrequencyPenalty: 0,
 		PresencePenalty:  0,
 	}
-	requestData, err := json.Marshal(requestBody)
-	if err != nil {
-		return nil, fmt.Errorf("json.Marshal requestBody error: %v", err)
-	}
-
-	log.Printf("gpt request(%d) json: %s\n", runtimes, string(requestData))
-
 	httpUrl := "https://api.openai.com/v1/completions"
 	if cfg.Model == "gpt-3.5-turbo" {
 		httpUrl = "https://api.openai.com/v1/chat/completions"
@@ -122,6 +115,13 @@ func httpRequestCompletions(msg string, runtimes int) (*ChatGPTResponseBody, err
 		}
 		requestBody.Messages = []Message{msgInfo}
 	}
+
+	requestData, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("json.Marshal requestBody error: %v", err)
+	}
+
+	log.Printf("gpt request(%d) json: %s\n", runtimes, string(requestData))
 
 	req, err := http.NewRequest(http.MethodPost, httpUrl, bytes.NewBuffer(requestData))
 	if err != nil {
