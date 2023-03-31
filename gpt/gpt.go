@@ -1,6 +1,7 @@
 package gpt
 
 import (
+	"strings"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -81,7 +82,7 @@ func Completions(msg string) (string, error) {
 	}
 	var reply string
 	if gptResponseBody != nil && len(gptResponseBody.Choices) > 0 {
-		if(gptResponseBody.Model=="gpt-3.5-turbo"){
+		if(strings.HasPrefix(gptResponseBody.Model, "gpt-3.5-turbo")){
 			reply = gptResponseBody.Choices[0].Message.Content
 		}else{
 			reply = gptResponseBody.Choices[0].Text
