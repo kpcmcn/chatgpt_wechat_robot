@@ -21,8 +21,8 @@ type Message struct {
 // ChatGPTRequestBody 请求体
 type ChatGPTRequestBody struct {
 	Model            string  `json:"model"`
-	Prompt           string  `json:"prompt"`
-	Messages         []Message  `json:"messages"`
+	Prompt           string  `json:"prompt,omitempty"`
+	Messages         []Message  `json:"messages,omitempty"`
 	MaxTokens        uint    `json:"max_tokens"`
 	Temperature      float64 `json:"temperature"`
 	TopP             int     `json:"top_p"`
