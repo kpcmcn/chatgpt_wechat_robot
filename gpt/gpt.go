@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 	"github.com/qingconglaixueit/wechatbot/config"
 )
@@ -131,7 +132,18 @@ func httpRequestCompletions(msg string, runtimes int) (*ChatGPTResponseBody, err
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+cfg.ApiKey)
-	client := &http.Client{Timeout: 30 * time.Second}
+	
+	// 创建代理地址
+	proxyUrl, err := url.Parse("http://127.0.0.1:7890")
+	if err != nil {
+		panic(err)
+	}
+	transport := &http.Transport{
+		Proxy:http.ProxyURL(proxyUrl),
+		ResponseHeaderTimeout:time.Second*120,
+	}
+	
+	client := &http.Client{Timeout: 30 * time.Second, Transport: transport}
 	response, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("client.Do error: %v", err)
